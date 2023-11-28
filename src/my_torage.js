@@ -1,10 +1,35 @@
 /* 带有时间限制的本地存储 */
+class Storage {
+  constructor(type) {
+    if (typeof window === "object") {
+      this.env = "browser";
+      this.map = type === "local" ? window.localStorage : window.sessionStorage;
+    } else {
+      this.env = "node";
+      this.map = new Map();
+    }
+  }
+  setItem(key, value) {
+    if (this.env === "node") {
+      const a = new Map();
+      this.map.set(key, value);
+    } else {
+      this.setItem(key, value);
+    }
+  }
+  getItem(key) {
+    if (this.env === "node") {
+      this.map.get(key, value);
+    } else {
+      this.getItem(key, value);
+    }
+  }
+}
 class LocalStorage {
   constructor(type = "local", interval = 7200000) {
     this.type = type;
     this.interval = interval;
-    this.storage =
-      type === "local" ? window.localStorage : window.sessionStorage;
+    this.storage = new Storage(type);
   }
   /**
    * 修改配置
@@ -31,7 +56,7 @@ class LocalStorage {
     let data = JSON.stringify({
       expireTime: new Date().getTime(),
       value,
-      interval
+      interval,
     });
     this.storage.setItem(key, data);
     return true;

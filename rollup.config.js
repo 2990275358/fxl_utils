@@ -1,7 +1,8 @@
-const resolve = require("rollup-plugin-node-resolve");
-const commonjs = require("rollup-plugin-commonjs");
-const typescript = require("rollup-plugin-typescript");
+const resolve = require("@rollup/plugin-node-resolve");
+const commonjs = require("@rollup/plugin-commonjs");
+const typescript = require("@rollup/plugin-typescript");
 const terser = require("@rollup/plugin-terser");
+const { babel } = require("@rollup/plugin-babel");
 const pkg = require("./package.json");
 
 module.exports = {
@@ -17,7 +18,11 @@ module.exports = {
   plugins: [
     // 打包插件
     resolve(), // 查找和打包node_modules中的第三方模块
-    commonjs(), // 将 CommonJS 转换成 ES2015 模块供 Rollup 处理
+    babel({
+      babelHelpers: "bundled",
+      exclude: "node_modules/**",
+    }),
     typescript(), // 解析TypeScript
+    commonjs(), // 将 CommonJS 转换成 ES2015 模块供 Rollup 处理
   ],
 };

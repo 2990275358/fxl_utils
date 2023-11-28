@@ -3,15 +3,20 @@ function getFn(fns, ele) {
     return fn in ele;
   });
 }
+function isNode() {
+  return typeof window !== "object";
+}
+
+const obj = isNode() ? {} : document;
 
 const enterFn = getFn(
   [
     "requestFullscreen",
     "webkitRquestFullscreen",
     "mozRquestFullscreen",
-    "msRquestFullscreen"
+    "msRquestFullscreen",
   ],
-  document.body
+  obj["body"] || {}
 );
 /**
  * 进入全屏
@@ -26,25 +31,25 @@ const exitFn = getFn(
     "exitFullscreen",
     "webkitExitFullscreen",
     "mozCancelFullscreen",
-    "msExisFullscreen"
+    "msExisFullscreen",
   ],
-  document
+  obj
 );
 /**
  * 退出全屏
  * @param {*} ele 退出的元素
  */
 function fullExit(ele) {
-  exitFn && document[exitFn]();
+  exitFn && obj[exitFn](ele);
 }
 const fulleleName = getFn(
   [
     "fullscreenElement",
     "webkitExitFullscreen",
     "mozfullscreenElement",
-    "msfullscreenElement"
+    "msfullscreenElement",
   ],
-  document
+  obj
 );
 
 /**
@@ -52,7 +57,7 @@ const fulleleName = getFn(
  * @returns 获取的元素
  */
 function fullEle() {
-  return document[fulleleName] || null;
+  return obj[fulleleName] || null;
 }
 /**
  * 是否处于全屏
