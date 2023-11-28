@@ -1,0 +1,22 @@
+{
+  "name": "fxl_utils",
+  "version": "1.0.0",
+  "author": "fxl",
+  "description": "Some of the tool approaches summarized during the development process",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "bugs": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "utils",
+    "array",
+    "localStorage",
+    "pubsub"
+  ],
+  "license": "ISC"
+}
