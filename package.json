@@ -1,17 +1,18 @@
 {
   "name": "fxl_utils",
   "version": "1.0.1",
-  "author": "fxl",
+  "author": "fuxulin",
   "description": "Some of the tool approaches summarized during the development process",
   "repository": {
     "type": "git",
     "url": "https://github.com/2990275358/fxl_utils.git"
   },
   "bugs": "https://github.com/2990275358/fxl_utils/issues",
-  "main": "dist/index.js",
-  "browser": "dist/index.js",
+  "main": "lib/index.js",
+  "browser": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "pnpm rollup -c"
   },
   "keywords": [
     "utils",
@@ -21,6 +22,9 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.23.3",
+    "@babel/preset-env": "^7.23.3",
+    "@rollup/plugin-terser": "^0.4.4",
     "rollup": "^4.6.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
