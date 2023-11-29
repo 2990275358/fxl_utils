@@ -1,3 +1,4 @@
+import { toLine } from "./common";
 /**
  * 循环对象
  * @param {Object} obj 要循环的对象
@@ -18,15 +19,12 @@ const loopObj = (obj, cb) => {
  */
 const isPainObject = (obj) => {
   if (typeof obj !== "object" || obj === null) return false;
-
   let proto = obj;
   while (Object.getPrototypeOf(proto) !== null) {
     proto = Object.getPrototypeOf(proto);
   }
-
   return Object.getPrototypeOf(obj) === proto;
 };
-
 /**
  * 对象克隆
  * @param {Object} obj 需要被克隆的对象
@@ -65,37 +63,10 @@ const clone = (obj, isDeep = false) => {
  * @param {*} newData
  * @returns 新对象
  */
-function combineData(defaultData, newData) {
-  return Object.assign({}, defaultData, newData);
+function combineData(...args) {
+  return Object.assign({}, ...args);
 }
-/**
- * 根据条件筛选列表
- * @param {Array} list [{a:1,b:2},{a:3,b:1}]
- * @param {object} condition { searchText:{ keys: ["a", "b"], values: 1 }}
- * @param {Array} equals 用来判断相等的值
- * @returns 筛选后的列表
- */
-function renderSearchData(list, condition, equals) {
-  return list.filter((item) => {
-    const values = Object.values(condition);
-    return values.every((res) => {
-      const { keys, value, isTime } = res;
-      let fn = "every";
-      if (keys.length > 1) {
-        fn = "some";
-      }
-      return keys[fn]((key) => {
-        if (equals.includes(key)) {
-          return item[key] == value;
-        }
-        if (isTime) {
-          return timeIsBetween(value[0], value[1], item[key]);
-        }
-        return item[key].indexOf(value) !== -1;
-      });
-    });
-  });
-}
+
 /**
  *  将接收的对象转成要传递给数据库的对象,并且删除掉空值
  * @param {Object} data 要处理的对象 {objName:"ss","id":"ss"}
@@ -122,11 +93,4 @@ function handleObject(data, shields = ["id"], noLine = []) {
   return newData;
 }
 
-export {
-  loopObj,
-  isPainObject,
-  clone,
-  combineData,
-  renderSearchData,
-  handleObject,
-};
+export { loopObj, isPainObject, clone, combineData, handleObject };

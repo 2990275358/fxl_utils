@@ -1,8 +1,3 @@
-declare function Qs(data: { [key: string]: any }): string;
-declare namespace Qs {
-  export function parse(str: string): { [key: string]: any };
-}
-
 type MyObject<T = any> = {
   [key: string | number]: string | number | boolean | T[] | MyObject<T>;
 };
@@ -27,17 +22,37 @@ declare class IPubsub {
   off(key: string, event: ISubEvent): void;
 }
 
+type SqlResult = [string, any[]];
+
+interface Sql {
+  insert(obj: any, tableName: string): SqlResult;
+  query(
+    tableName: string,
+    fieldName: string,
+    resultField: string,
+    value: number | string
+  ): SqlResult;
+  update(
+    obj: any,
+    tableName: string,
+    fieldName: string,
+    value: number | string
+  ): SqlResult;
+  remove(
+    tableName: string,
+    fieldName: string,
+    value: number | string
+  ): SqlResult;
+  execute(statement: string, options: any): SqlResult;
+  handelFuzzyQuery(data: any, tableAs: string, isOffset: boolean): string[];
+}
+
 export function loopObj(
   object: object,
   cb: (value: any, string: string) => void
 ): void;
 export function isPainObject(object: object): boolean;
 export function clone<T = any>(target: T, isDeep?: boolean): T;
-export function renderSearchData<T = MyObject[]>(
-  list: T,
-  condition: Record<keyof T[number], any>,
-  equals: (keyof T[number])[]
-): T;
 export function handleObject<T = MyObject>(
   data: T,
   shields?: (keyof T)[],
@@ -61,25 +76,26 @@ export function debounce<T extends (...args: any[]) => any>(
   fn: T,
   delay?: number
 ): (...args: Parameters<T>) => void;
-export function delay(time?: number): Promise<void>;
 export function toLine(name: string): string;
 export function toCamelCase(name: string): string;
 export function notNullData<T = any>(...args: T[]): T;
 export function getCode(len: number): string;
 export function isEmpty(target: any): boolean;
 export function checkWord(word: string, key: RegExp | string): boolean;
+export function qsParse<T = MyObject>(str: string): T;
+export function qsStringify(data: MyObject): string;
 
 export function findTreeArr(arr: any[] = [], keyName: string[] | string): any[];
-export function arrToTree(arr: any[] = []): any[];
+export function arrToTree(arr: any[], idKey?: string, pidKey?: string): any[];
 export function arrClassify<T = any>(
   arr: T[],
   key: string | string[],
   handle: (item: T) => T
 ): { [key: string]: T[] };
-export function flatArr(arr: any[], keyName: string | string[]): any[];
+export function flatArr(arr: any[], key: string): any[];
 export function arrContrast<T = any>(oldArr: T[], newArr: T[]): T[];
 
-export const qs: Qs;
 export const sessionCache: ILocalStorage;
 export const localCache: ILocalStorage;
 export const pubsub: IPubsub;
+export const sql: Sql;

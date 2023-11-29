@@ -20,7 +20,7 @@ function formatTime(timestamp, format = "yyyy/MM/dd HH:mm:ss") {
  * @param {String} tableName 需要插入的表名
  * @returns
  */
-function insertSql(obj, tableName) {
+function insert(obj, tableName) {
   const keys = Object.keys(obj);
   const optArr = [];
   const valArr = [];
@@ -42,10 +42,10 @@ function insertSql(obj, tableName) {
  * @param {String | Number} value 判断的值
  * @returns
  */
-const querySql = (tableName, fieldName, resultField = "id", value) => {
-  let statement = `select ${resultField} from ${tableName} where ${fieldName} = ?`;
+const query = (tableName, fieldName, resultField = "id", value) => {
+  let statement = `SELECT ${resultField} FROM ${tableName} WHERE ${fieldName} = ?`;
   if (!fieldName || !value) {
-    statement = `select ${resultField} from ${tableName}`;
+    statement = `SELECT ${resultField} FROM ${tableName}`;
   }
   return [statement, value];
 };
@@ -56,7 +56,7 @@ const querySql = (tableName, fieldName, resultField = "id", value) => {
  * @param {String} fieldName 条件字段
  * @param {String} value 条件字段的值 fieldName = value
  */
-const updateSql = (obj, tableName, fieldName, value) => {
+const update = (obj, tableName, fieldName, value) => {
   const keys = Object.keys(obj);
   const values = [];
   const options = [];
@@ -65,9 +65,10 @@ const updateSql = (obj, tableName, fieldName, value) => {
     values.push(`${key} = ?`);
     options.push(obj[key]);
   }
-  const statement = `update ${tableName} set ${values.join(
+  const statement = `UPDATE ${tableName} SET ${values.join(
     ", "
-  )} where ${fieldName} = '${value}';`;
+  )} WHERE ${fieldName} = ?;`;
+  options.push(value);
   return [statement, options];
 };
 /**
@@ -77,9 +78,9 @@ const updateSql = (obj, tableName, fieldName, value) => {
  * @param {*} value 条件字段的值
  * @returns
  */
-const deleteSql = (tableName, fieldName, value) => {
-  const statement = `delete from ${tableName} where ${fieldName} = ?;`;
-  return [statement, value];
+const remove = (tableName, fieldName, value) => {
+  const statement = `DELETE FROM ${tableName} WHERE ${fieldName} = ?;`;
+  return [statement, [value]];
 };
 /**
  * 处理模糊查询的参数
@@ -95,9 +96,10 @@ function strMerge(str, word) {
 function handelFuzzyQuery(data, tableAs, isOffset = true) {
   let str = "";
   let limit = "";
+  tableAs = tableAs ? tableAs + "." : "";
   for (const key in data) {
     if (!["createAt", "size", "offset"].includes(key)) {
-      str = strMerge(str, ` ${tableAs + "."}${key} like '%${data[key]}%' AND`);
+      str = strMerge(str, ` ${tableAs}${key} like '%${data[key]}%' AND`);
     }
   }
   // 时间条件
@@ -105,9 +107,9 @@ function handelFuzzyQuery(data, tableAs, isOffset = true) {
     const times = data["createAt"];
     str = strMerge(
       str,
-      ` ${tableAs + "."}createAt BETWEEN '${formatTime(
-        times[0]
-      )}' AND '${formatTime(times[1])}' `
+      ` ${tableAs}createAt BETWEEN '${formatTime(times[0])}' AND '${formatTime(
+        times[1]
+      )}' `
     );
   }
   // 清除多余的AND拼接
@@ -128,7 +130,7 @@ function handelFuzzyQuery(data, tableAs, isOffset = true) {
  * @param {*} options 参数
  * @returns 执行后的结果
  */
-function executeSql(statement, options) {
+function execute(statement, options) {
   const params = [];
   statement = statement.replace(/{{(.*?)}}/g, (match) => {
     // 获取键名并去除多余空格
@@ -139,11 +141,4 @@ function executeSql(statement, options) {
   });
   return [statement, params];
 }
-export {
-  insertSql,
-  querySql,
-  updateSql,
-  deleteSql,
-  executeSql,
-  handelFuzzyQuery,
-};
+export { insert, query, update, remove, execute, handelFuzzyQuery };

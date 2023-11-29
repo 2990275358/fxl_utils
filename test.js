@@ -1,11 +1,21 @@
-const { findTreeArr } = require("./lib");
+const { arrClassify, arrContrast, loopObj, sql } = require("./lib");
 
 const arr = [
   {
-    a: 1,
-    children: [{ a: 2 }],
+    id: 1,
+    name: "张三",
+    deptName: "研发部",
   },
-  { a: 3 },
+  {
+    id: 2,
+    name: "李四",
+    deptName: "测试部",
+  },
+  {
+    id: 3,
+    name: "王五",
+    deptName: "研发部",
+  },
 ];
 
-console.log(findTreeArr(arr, "a"));
+console.dir(sql.update({ name: "张三", age: 18 }, "user", "id", 1));

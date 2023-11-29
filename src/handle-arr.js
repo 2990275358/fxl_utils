@@ -39,15 +39,15 @@ function findTreeArr(arr = [], keyName) {
  * @param {Array} arr 要拍平的目标数组
  * @returns 拍平后的数组
  */
-function flatArr(arr) {
+function flatArr(arr, key = "children") {
   const newArr = JSON.parse(JSON.stringify(arr));
   function _recursion(arr) {
     return arr.reduce((pre, cur) => {
       pre.push(cur);
-      if (cur.children && cur.children.length > 0) {
-        pre.push(..._recursion(cur.children));
+      if (cur[key] && cur[key].length > 0) {
+        pre.push(..._recursion(cur[key]));
       }
-      Reflect.deleteProperty(cur, "children");
+      Reflect.deleteProperty(cur, key);
       return pre;
     }, []);
   }
@@ -58,19 +58,19 @@ function flatArr(arr) {
  * @param {Array} arr 要转换的数组 [{id:"1",pid:""},{id:"2",pid:"1"}] id和pid是必需字段
  * @returns [{id:"1",pid:"",children:[{id:"2",pid:"1"}]}]
  */
-function arrToTree(arr = []) {
+function arrToTree(arr = [], idKey = "id", pidKey = "pid") {
   const newArr = JSON.parse(JSON.stringify(arr));
   const result = [];
   newArr.map((res) => {
-    res.children = newArr.filter((ret) => ret.pid == res.id);
-    if (!res.pid) {
+    res.children = newArr.filter((ret) => ret[pidKey] == res[idKey]);
+    if (!res[pidKey]) {
       result.push(res);
     }
   });
   return result;
 }
 /**
- *
+ * 数组分组
  * @param {Array} arr 要分组的目标数组 [{dept:"研发"，name:"A"},{dept:"测试"，name:"B"}]
  * @param {string | string[]} key 分组的key，如果目标对象中没有这个属性就会以这个key为依据进行分组，
  * 例如 key = "全部" 结果为 {"全部":[{dept:"研发"，name:"A"},{dept:"测试"，name:"B"}]}
