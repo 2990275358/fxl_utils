@@ -91,7 +91,7 @@ function arrClassify(arr, key, handle) {
   return result;
 }
 /**
- * 将两个数组中不一致的数据找出来
+ * 将原来数组存在新数组不存在的数据找出来
  * @param {Array} oldArr 数据较多的数组 [a,2,34,4]
  * @param {Array} newArr 数据较短的数组 [a,2]
  * @returns [34,4]

@@ -142,6 +142,33 @@ function notNullData(...args) {
     if (!isEmpty(arg)) return arg;
   }
 }
+/**
+ * 将对象拼接成get请求参数
+ * @param data 要拼接的对象
+ * @returns 拼接后的字符串
+ */
+const qs = (data) => {
+  if (Object.keys(data).length === 0) return "";
+  let str = "";
+  for (const key in data) {
+    str += `${key}=${data[key]}&`;
+  }
+  str = str.substring(0, str.length - 1);
+  return encodeURI(str);
+};
+qs.parse = (str) => {
+  if (typeof str !== "string" || str === "") return {};
+  str = /^\?/.test(str) ? str.substring(1) : str;
+  const strArr = str.split("&"),
+    result = {},
+    len = strArr.length;
+  if (len === 0) return {};
+  for (let i = 0; i < len; i++) {
+    const target = strArr[i].split("=");
+    result[target[0]] = decodeURI(target[1]);
+  }
+  return result;
+};
 
 export {
   randomString,
@@ -155,4 +182,5 @@ export {
   toLine,
   toCamelCase,
   notNullData,
+  qs,
 };
