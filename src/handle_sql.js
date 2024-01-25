@@ -14,21 +14,42 @@ function formatTime(timestamp, format = "yyyy/MM/dd HH:mm:ss") {
   format = format.replace(/ss/g, second.toString().padStart(2, "0"));
   return format;
 }
+function strMerge(str, word) {
+  if (!str && word) str = "WHERE ";
+  return str + word;
+}
+/**
+ * 解析参数对象
+ * @param {object} obj 被解析的对象
+ * @param {*} handleKey 处理需要拼接的键值
+ * @returns [预处理的占位符{array}，属性值{array}，键值{array}]
+ */
+function compileObj(obj = {}, handleKey) {
+  if (typeof obj !== "object") {
+    throw TypeError("The parameters must be objects");
+  }
+  if (handleKey && typeof handleKey != "function") {
+    throw TypeError("The handleKey must be a function");
+  }
+  const keys = [];
+  const values = [];
+  const opts = [];
+  let isFunc = typeof handleKey === "function";
+  for (const item of Object.entries(obj)) {
+    opts.push(`${isFunc ? handleKey(item[0]) : "?"}`);
+    keys.push(item[0]);
+    values.push(item[1]);
+  }
+  return [opts, values, keys];
+}
 /**
  * 将插入语句封装，只需要传入对应的参数即可
- * @param {object} obj 需要插入表的字段
  * @param {String} tableName 需要插入的表名
- * @returns
+ * @param {object} obj 需要插入表的字段，键名需要与数据库对应
+ * @returns [预处理语句{string}，条件值{array}]
  */
-function insert(obj, tableName) {
-  const keys = Object.keys(obj);
-  const optArr = [];
-  const valArr = [];
-  if (!keys.length) return [];
-  for (let res of keys) {
-    optArr.push("?");
-    valArr.push(obj[res]);
-  }
+function insert(tableName, obj = {}) {
+  const [optArr, valArr, keys] = compileObj(obj);
   const statement = `INSERT INTO ${tableName} (${keys.join(
     ","
   )}) VALUE (${optArr.join(",")});`;
@@ -36,51 +57,47 @@ function insert(obj, tableName) {
 }
 /**
  * 查询某一字段在数据库
- * @param {String} tableName 查询的表名
- * @param {String} fieldName 查询的表字段
- * @param {String} resultField 需要的结果字段
- * @param {String | Number} value 判断的值
- * @returns
+ * @param {string} tableName 查询的表名
+ * @param {string} resultField 需要的结果字段
+ * @param {object} condition 查询的条件，键名需要与数据库对应
+ * @returns [预处理语句{string}，条件值{array}]
  */
-const query = (tableName, fieldName, resultField = "id", value) => {
-  let statement = `SELECT ${resultField} FROM ${tableName} WHERE ${fieldName} = ?`;
-  if (!fieldName || !value) {
+const query = (tableName, resultField = "id", condition = {}) => {
+  let [optArr, valArr] = compileObj(condition, (key) => `${key} = ?`);
+  let statement = `SELECT ${resultField} FROM ${tableName} WHERE ${optArr.join(
+    " AND "
+  )}`;
+  if (!optArr.length || !valArr.length) {
     statement = `SELECT ${resultField} FROM ${tableName}`;
+    valArr = [];
   }
-  return [statement, value];
+  return [statement, valArr];
 };
 /**
  * 执行修改语句
- * @param {Object} obj 需要修改的字段 { name:"我爱吃鱼"}
- * @param {String} tableName 需要修改的表名
- * @param {String} fieldName 条件字段
- * @param {String} value 条件字段的值 fieldName = value
+ * @param {*} tableName 需要修改的表名
+ * @param {*} obj 需要修改的字段，键名需要与数据库对应 { name:"我爱吃鱼"}
+ * @param {*} condition 执行的条件，键名需要与数据库对应
+ * @returns [预处理语句{string}，条件值{array}]
  */
-const update = (obj, tableName, fieldName, value) => {
-  const keys = Object.keys(obj);
-  const values = [];
-  const options = [];
-  if (!keys.length) return [];
-  for (let key of keys) {
-    values.push(`${key} = ?`);
-    options.push(obj[key]);
-  }
-  const statement = `UPDATE ${tableName} SET ${values.join(
+const update = (tableName, obj, condition) => {
+  const [optArr, valArr] = compileObj(obj, (key) => `${key} = ?`);
+  const [conOptArr, conValArr] = compileObj(condition, (key) => `${key} = ?`);
+  const statement = `UPDATE ${tableName} SET ${optArr.join(
     ", "
-  )} WHERE ${fieldName} = ?;`;
-  options.push(value);
-  return [statement, options];
+  )} WHERE ${conOptArr.join(" AND ")};`;
+  return [statement, [...valArr, ...conValArr]];
 };
 /**
  * 执行SQL的删除语句
- * @param {String} tableName 要删除内容的表名
- * @param {String} fieldName 要删除的条件字段
- * @param {*} value 条件字段的值
- * @returns
+ * @param {*} tableName 要删除内容的表名
+ * @param {*} condition 执行的条件，键名需要与数据库对应
+ * @returns [预处理语句{string}，条件值{array}]
  */
-const remove = (tableName, fieldName, value) => {
-  const statement = `DELETE FROM ${tableName} WHERE ${fieldName} = ?;`;
-  return [statement, [value]];
+const remove = (tableName, condition) => {
+  const [optArr, valArr] = compileObj(condition, (key) => `${key} = ?`);
+  const statement = `DELETE FROM ${tableName} WHERE ${optArr.join(" AND ")};`;
+  return [statement, valArr];
 };
 /**
  * 处理模糊查询的参数
@@ -89,10 +106,6 @@ const remove = (tableName, fieldName, value) => {
  * @param {boolean} isOffset 是否需要分页查询
  * @returns 返回拼接好的字符串，如果isOffset为false则返回数组，将条件查询和分页查询的语句一并返回
  */
-function strMerge(str, word) {
-  if (!str && word) str = "WHERE";
-  return str + word;
-}
 function handelFuzzyQuery(data, tableAs, isOffset = true) {
   let str = "";
   let limit = "";

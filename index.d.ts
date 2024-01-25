@@ -17,33 +17,25 @@ type ISubEvent<T> = (...arges: any[]) => T;
 
 declare class IPubsub {
   subscribers: object;
-  emit(key: string, data: any[], thisArg?: any): void;
-  on(key: string, event: ISubEvent): void;
-  off(key: string, event: ISubEvent): void;
+  emit<T>(key: string, data: T[]): IPubsub;
+  on(key: string, event: ISubEvent): IPubsub;
+  off(key: string, event: ISubEvent): IPubsub;
+  once(key: string, event: ISubEvent): IPubsub;
+  has(key: string): IPubsub;
 }
 
 type SqlResult = [string, any[]];
 
 interface Sql {
-  insert(obj: any, tableName: string): SqlResult;
+  insert(tableName: string, obj: any): SqlResult;
   query(
     tableName: string,
-    fieldName: string,
     resultField: string,
-    value: number | string
+    condition?: MyObject
   ): SqlResult;
-  update(
-    obj: any,
-    tableName: string,
-    fieldName: string,
-    value: number | string
-  ): SqlResult;
-  remove(
-    tableName: string,
-    fieldName: string,
-    value: number | string
-  ): SqlResult;
-  execute(statement: string, options: any): SqlResult;
+  update(tableName: string, obj: MyObject, condition: MyObject): SqlResult;
+  remove(tableName: string, condition: MyObject): SqlResult;
+  execute(statement: string, options: MyObject): SqlResult;
   handelFuzzyQuery(data: any, tableAs: string, isOffset: boolean): string[];
 }
 
@@ -87,7 +79,7 @@ export function qsStringify(data: MyObject): string;
 
 export function findTreeArr(arr: any[] = [], keyName: string[] | string): any[];
 export function arrToTree(arr: any[], idKey?: string, pidKey?: string): any[];
-export function arrClassify<T = any>(
+export function arrClassify<T>(
   arr: T[],
   key: string | string[],
   handle: (item: T) => T
@@ -98,4 +90,5 @@ export function arrContrast<T = any>(oldArr: T[], newArr: T[]): T[];
 export const sessionCache: ILocalStorage;
 export const localCache: ILocalStorage;
 export const pubsub: IPubsub;
+export const PubSub: IPubsub;
 export const sql: Sql;

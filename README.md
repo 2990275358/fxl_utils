@@ -506,7 +506,7 @@ handleObject({
 
 因为现在执行 **SQL** 时一般都采用预处理语句，所以该部分主要是生成预处理语句和格式化好的值，主要参照的是 **mysql2** 库执行预处理语句要求的参数封装的
 
-### insert
+### sql.insert
 
 格式化插入语句
 
@@ -514,75 +514,80 @@ handleObject({
 
 | 参数名    | 类型       | 说明         |
 | --------- | ---------- | ------------ |
-| obj       | **object** | 要插入的值   |
 | tableName | **string** | 要插入的表名 |
+| obj       | **object** | 要插入的值   |
 
 **示例：**
 
 ```js
-insert({name:"张三",age:18},"user") // ["INSERT INTO user(name,age) VALUES(?,?)",["张三",18]]
+sql.insert({name:"张三",age:18},"user") // ["INSERT INTO user(name,age) VALUES(?,?)",["张三",18]]
 ```
 
-### query
+### sql.query
 
 格式化查询语句
 
 **参数：**
 
-| 参数名      | 类型                 | 说明           |
-| ----------- | -------------------- | -------------- |
-| tableName   | **string**           | 要查询的表名   |
-| fieldName   | **string**           | 查询的条件字段 |
-| resultField | **string**           | 查询的结果字段 |
-| value       | **number \| string** | 条件判断的值   |
+| 参数名      | 类型       | 说明                             |
+| ----------- | ---------- | -------------------------------- |
+| tableName   | **string** | 要查询的表名                     |
+| resultField | **string** | 查询的结果字段                   |
+| condition   | **object** | 查询的条件，键名需要与数据库对应 |
 
 **示例：**
 
 ```js
-query("user","id","name,age",1) // ["SELECT name,age FROM user WHERE id = 1",[1]]
+sql.query("user", "id", { a: "abc", b: "sss", c: 2 }) // [
+  'SELECT id FROM user WHERE a = ? AND b = ? AND c = ?',
+  [ 'abc', 'sss', 2 ]
+]
 
-// 以下写法虽然可以但是不推荐
-query("user",`name = ${'张三'} AND id`,"name,age",1) // ["SELECT name,age FROM user WHERE name = '张三' AND id = 1",[1]]
+sql.query("user"，"id") // ["SELECT id FROM user;",[]]
 ```
 
-### update
+### sql.update
 
 格式化修改语句
 
 **参数：**
 
-| 参数名    | 类型                 | 说明         |
-| --------- | -------------------- | ------------ |
-| obj       | **object**           | 要修改的值   |
-| tableName | **string**           | 要插入的表名 |
-| fieldName | **string**           | 条件字段     |
-| value     | **number \| string** | 条件判断的值 |
+| 参数名    | 类型       | 说明                             |
+| --------- | ---------- | -------------------------------- |
+| tableName | **string** | 要插入的表名                     |
+| obj       | **object** | 要修改的值                       |
+| condition | **object** | 执行的条件，键名需要与数据库对应 |
 
 **示例：**
 
 ```js
-update({name:"张三",age:18},"user","id",1) // ["UPDATE user SET name = ?,age = ? WHERE id = ?;",["张三",18,1]]
+sql.update("user", { a: "abc", b: "sss", c: 2 }, { name: "张三", age: 18 }) // [
+  'UPDATE user SET a = ?, b = ?, c = ? WHERE name = ? AND age = ?;',
+  [ 'abc', 'sss', 2, '张三', 18 ]
+]
 ```
 
-### remove
+### sql.remove
 
 格式化删除语句
 
 **参数：**
 
-| 参数名    | 类型                 | 说明         |
-| --------- | -------------------- | ------------ |
-| tableName | **string**           | 要删除的表名 |
-| fieldName | **string**           | 条件字段     |
-| value     | **number \| string** | 条件判断的值 |
+| 参数名    | 类型       | 说明                             |
+| --------- | ---------- | -------------------------------- |
+| tableName | **string** | 要删除的表名                     |
+| condition | **object** | 执行的条件，键名需要与数据库对应 |
 
 **示例：**
 
 ```js
-remove("user","id",1) // ["DELETE FROM user WHERE id = ?;",[1]]
+sql.remove("s", { a: "abc", b: "sss", c: 2 }) // [
+  'DELETE FROM s WHERE a = ? AND b = ? AND c = ?;',
+  [ 'abc', 'sss', 2 ]
+]
 ```
 
-### handelFuzzyQuery
+### sql.handelFuzzyQuery
 
 处理模糊查询的参数，这个函数编写是为了简单处理模糊查询，函数实现内部写死了一些参数，例如分页的 **size** 和 **offset**，还有创建时间 **createAt**
 
@@ -597,12 +602,12 @@ remove("user","id",1) // ["DELETE FROM user WHERE id = ?;",[1]]
 **示例：**
 
 ```js
-handelFuzzyQuery({name:1,createAt:["2023-11-14 18:20:00","2023-12-14 18:20:00"],offset:1,size:10},"u") // "WHERE name LIKE '%1%' AND createAt BETWEEN '2023-11-14 18:20:00' AND '2023-12-14 18:20:00' LIMIT 10 OFFSET 1;"
+sql.handelFuzzyQuery({name:1,createAt:["2023-11-14 18:20:00","2023-12-14 18:20:00"],offset:1,size:10},"u") // "WHERE name LIKE '%1%' AND createAt BETWEEN '2023-11-14 18:20:00' AND '2023-12-14 18:20:00' LIMIT 10 OFFSET 1;"
 
-handelFuzzyQuery({name:1,createAt:["2023-11-14 18:20:00","2023-12-14 18:20:00"],offset:1,size:10},"u",false) // ["WHERE name LIKE '%1%' AND createAt BETWEEN '2023-11-14 18:20:00' AND '2023-12-14 18:20:00'","LIMIT 10 OFFSET 1"]
+sql.handelFuzzyQuery({name:1,createAt:["2023-11-14 18:20:00","2023-12-14 18:20:00"],offset:1,size:10},"u",false) // ["WHERE name LIKE '%1%' AND createAt BETWEEN '2023-11-14 18:20:00' AND '2023-12-14 18:20:00'","LIMIT 10 OFFSET 1"]
 ```
 
-### execute
+### sql.execute
 
 对于复杂的 **SQL** 语句时，前面的封装会很难应对，所以有了这个函数，能应对复杂的语句
 
@@ -616,7 +621,7 @@ handelFuzzyQuery({name:1,createAt:["2023-11-14 18:20:00","2023-12-14 18:20:00"],
 **示例：**
 
 ```js
-execute(`
+sql.execute(`
 	SELECT u.id,u.name FROM user u LEFT JOIN dept d ON d.id = u.deptId WHERE u.name = {{searchText}} OR d.name = {{searchText}} OR age > {{age}};
 `,{age:18,searchText:"研发部"}) // ["SELECT u.id,u.name FROM user u LEFT JOIN dept d ON d.id = u.deptId WHERE u.name = ? OR d.name = ? OR age > ?;",["研发部"，“研发部”,18]]
 ```
@@ -676,5 +681,67 @@ const localCache = new LocalStorage();
 const sessionCache = localCache.setConfig("session");
 ```
 
+## pubsub
 
+该模块实现了发布订阅的基本功能，能够在 **vue** 或 **React** 中简单使用。**has** 外的所有方法都会返回实例本身以此来支持链式调用。
+
+### on
+
+订阅事件，一个关键字可以订阅多个事件，但是一个事件只能被订阅一次
+
+**参数：**
+
+| 参数名 | 类型         | 说明                 |
+| ------ | ------------ | -------------------- |
+| key    | **string**   | 要订阅的关键字       |
+| event  | **function** | 订阅发布时执行的事件 |
+
+### once
+
+订阅一次事件，这个关键字订阅后只会被触发一次
+
+**参数：**
+
+| 参数名 | 类型         | 说明                 |
+| ------ | ------------ | -------------------- |
+| key    | **string**   | 要订阅的关键字       |
+| event  | **function** | 订阅发布时执行的事件 |
+
+### emit
+
+触发订阅的事件
+
+**参数：**
+
+| 参数名 | 类型       | 说明                                               |
+| ------ | ---------- | -------------------------------------------------- |
+| key    | **string** | 要订阅的关键字                                     |
+| args   | **any[]**  | 多个参数，默认会将最后一个参数作为this绑定到函数上 |
+
+### off
+
+取消订阅
+
+**参数：**
+
+| 参数名 | 类型         | 说明               |
+| ------ | ------------ | ------------------ |
+| key    | **string**   | 要取消订阅的关键字 |
+| event  | **function** | 取消订阅的事件     |
+
+### clear
+
+清空所有订阅
+
+**参数：** 无
+
+### off
+
+检查是否有订阅该事件
+
+**参数：**
+
+| 参数名 | 类型       | 说明           |
+| ------ | ---------- | -------------- |
+| key    | **string** | 订阅事件的名称 |
 
